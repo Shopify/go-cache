@@ -6,4 +6,4 @@ go:
 - 1.12
 - 1.13
 - tip
-go_import_path: github.com/Shopify/go-storage
+go_import_path: github.com/Shopify/go-cache
