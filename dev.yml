@@ -12,6 +12,7 @@ up:
         name: Load dependencies
         met?: go mod tidy
         meet: go mod tidy
+  - railgun
 
 commands:
   test: go test -race ./...
