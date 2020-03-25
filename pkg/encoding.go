@@ -12,3 +12,5 @@ type Encoding interface {
 	Encoder
 	Decoder
 }
+
+var DefaultEncoding = GobEncoding

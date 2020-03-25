@@ -12,3 +12,4 @@ volumes:
 
 services:
   - memcached
+  - redis
