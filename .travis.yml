@@ -6,3 +6,9 @@ go:
 - 1.13
 - tip
 go_import_path: github.com/Shopify/go-cache
+
+env:
+  - MEMCACHED_SERVERS=localhost:11211
+
+services:
+  - memcached
