@@ -1,0 +1,14 @@
+# https://dev-accel.shopify.io/dev/railgun/Railgun-Config
+name: go-cache
+
+vm:
+  image:      /opt/dev/misc/railgun-images/default
+  ip_address: 192.168.64.136
+  memory:     1G
+  cores:      2
+
+volumes:
+  root: 2G
+
+services:
+  - memcached
