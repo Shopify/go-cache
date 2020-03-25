@@ -1,23 +1,21 @@
 package cache
 
 import (
-	"bytes"
-	"encoding/gob"
 	"net"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/pkg/errors"
 )
 
 var _ Client = &memcacheClient{}
 
 func NewMemcacheClient(c *memcache.Client) *memcacheClient {
-	return &memcacheClient{client: c}
+	return &memcacheClient{client: c, encoding: GobEncoding}
 }
 
 type memcacheClient struct {
-	client *memcache.Client
+	client   *memcache.Client
+	encoding Encoding
 }
 
 func (c *memcacheClient) Get(key string) (*Item, error) {
@@ -30,11 +28,11 @@ func (c *memcacheClient) Get(key string) (*Item, error) {
 		return nil, coalesceTimeoutError(err)
 	}
 
-	return decodeMemcacheItem(mItem)
+	return c.decodeItem(mItem)
 }
 
 func (c *memcacheClient) Set(key string, item *Item) error {
-	mItem, err := encodeMemcacheItem(key, item)
+	mItem, err := c.encodeItem(key, item)
 	if err != nil {
 		return err
 	}
@@ -42,7 +40,7 @@ func (c *memcacheClient) Set(key string, item *Item) error {
 }
 
 func (c *memcacheClient) Add(key string, item *Item) error {
-	mItem, err := encodeMemcacheItem(key, item)
+	mItem, err := c.encodeItem(key, item)
 	if err != nil {
 		return err
 	}
@@ -64,22 +62,18 @@ func (c *memcacheClient) Delete(key string) error {
 	return coalesceTimeoutError(err)
 }
 
-func decodeMemcacheItem(mItem *memcache.Item) (*Item, error) {
-	dec := gob.NewDecoder(bytes.NewReader(mItem.Value))
-	var item Item
-	err := dec.Decode(&item)
-	return &item, errors.Wrap(err, "unable to decode item")
+func (c *memcacheClient) decodeItem(mItem *memcache.Item) (*Item, error) {
+	return c.encoding.Decode(mItem.Value)
 }
 
-func encodeMemcacheItem(key string, item *Item) (*memcache.Item, error) {
-	encoded := &bytes.Buffer{}
-	enc := gob.NewEncoder(encoded)
-	if err := enc.Encode(*item); err != nil {
-		return nil, errors.Wrap(err, "unable to encode item")
+func (c *memcacheClient) encodeItem(key string, item *Item) (*memcache.Item, error) {
+	encoded, err := c.encoding.Encode(item)
+	if err != nil {
+		return nil, err
 	}
 
 	return &memcache.Item{
-		Value:      encoded.Bytes(),
+		Value:      encoded,
 		Expiration: int32(time.Until(item.Expiration).Seconds()),
 		Key:        key,
 	}, nil
