@@ -1,8 +1,8 @@
 package cache
 
 import (
+	"math"
 	"net"
-	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
 )
@@ -72,11 +72,15 @@ func (c *memcacheClient) encodeItem(key string, item *Item) (*memcache.Item, err
 		return nil, err
 	}
 
-	return &memcache.Item{
-		Value:      encoded,
-		Expiration: int32(time.Until(item.Expiration).Seconds()),
-		Key:        key,
-	}, nil
+	mItem := &memcache.Item{
+		Value: encoded,
+		Key:   key,
+	}
+	if item.Duration() != 0 {
+		mItem.Expiration = int32(math.Max(item.Duration().Seconds(), 1))
+	}
+
+	return mItem, nil
 }
 
 type connectTimeoutError struct{}
