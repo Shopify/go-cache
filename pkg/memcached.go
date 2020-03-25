@@ -1,25 +1,25 @@
 package cache
 
 import (
-	"bytes"
-	"encoding/gob"
 	"net"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/pkg/errors"
 )
 
-func NewMemcacheClient(c *memcache.Client) Client {
-	return &memcacheClientWrapper{client: c}
+var _ Client = &memcacheClient{}
+
+func NewMemcacheClient(c *memcache.Client) *memcacheClient {
+	return &memcacheClient{client: c, encoding: GobEncoding}
 }
 
-type memcacheClientWrapper struct {
-	client *memcache.Client
+type memcacheClient struct {
+	client   *memcache.Client
+	encoding Encoding
 }
 
-func (w *memcacheClientWrapper) Get(key string) (*Item, error) {
-	mItem, err := w.client.Get(key)
+func (c *memcacheClient) Get(key string) (*Item, error) {
+	mItem, err := c.client.Get(key)
 	if err != nil {
 		// Abstract the memcache-specific error
 		if err == memcache.ErrCacheMiss {
@@ -28,23 +28,23 @@ func (w *memcacheClientWrapper) Get(key string) (*Item, error) {
 		return nil, coalesceTimeoutError(err)
 	}
 
-	return decodeMemcacheItem(mItem)
+	return c.decodeItem(mItem)
 }
 
-func (w *memcacheClientWrapper) Set(key string, item *Item) error {
-	mItem, err := encodeMemcacheItem(key, item)
+func (c *memcacheClient) Set(key string, item *Item) error {
+	mItem, err := c.encodeItem(key, item)
 	if err != nil {
 		return err
 	}
-	return coalesceTimeoutError(w.client.Set(mItem))
+	return coalesceTimeoutError(c.client.Set(mItem))
 }
 
-func (w *memcacheClientWrapper) Add(key string, item *Item) error {
-	mItem, err := encodeMemcacheItem(key, item)
+func (c *memcacheClient) Add(key string, item *Item) error {
+	mItem, err := c.encodeItem(key, item)
 	if err != nil {
 		return err
 	}
-	err = w.client.Add(mItem)
+	err = c.client.Add(mItem)
 
 	if err == memcache.ErrNotStored {
 		// Abstract the memcache-specific error
@@ -53,8 +53,8 @@ func (w *memcacheClientWrapper) Add(key string, item *Item) error {
 	return coalesceTimeoutError(err)
 }
 
-func (w *memcacheClientWrapper) Delete(key string) error {
-	err := w.client.Delete(key)
+func (c *memcacheClient) Delete(key string) error {
+	err := c.client.Delete(key)
 	if err == memcache.ErrCacheMiss {
 		// Deleting a missing entry is not an actual issue.
 		return nil
@@ -62,22 +62,18 @@ func (w *memcacheClientWrapper) Delete(key string) error {
 	return coalesceTimeoutError(err)
 }
 
-func decodeMemcacheItem(mItem *memcache.Item) (*Item, error) {
-	dec := gob.NewDecoder(bytes.NewReader(mItem.Value))
-	var item Item
-	err := dec.Decode(&item)
-	return &item, errors.Wrap(err, "unable to decode item")
+func (c *memcacheClient) decodeItem(mItem *memcache.Item) (*Item, error) {
+	return c.encoding.Decode(mItem.Value)
 }
 
-func encodeMemcacheItem(key string, item *Item) (*memcache.Item, error) {
-	encoded := &bytes.Buffer{}
-	enc := gob.NewEncoder(encoded)
-	if err := enc.Encode(*item); err != nil {
-		return nil, errors.Wrap(err, "unable to encode item")
+func (c *memcacheClient) encodeItem(key string, item *Item) (*memcache.Item, error) {
+	encoded, err := c.encoding.Encode(item)
+	if err != nil {
+		return nil, err
 	}
 
 	return &memcache.Item{
-		Value:      encoded.Bytes(),
+		Value:      encoded,
 		Expiration: int32(time.Until(item.Expiration).Seconds()),
 		Key:        key,
 	}, nil
