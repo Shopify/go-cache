@@ -3,7 +3,6 @@ package cache
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/pkg/errors"
 )
 
 var GobEncoding Encoding = NewGobEncoding()
@@ -14,23 +13,17 @@ func NewGobEncoding() *gobEncoding {
 
 type gobEncoding struct {}
 
-func (e *gobEncoding) Encode(item *Item) ([]byte, error) {
+func (e *gobEncoding) Encode(data interface{}) ([]byte, error) {
 	encoded := &bytes.Buffer{}
 	enc := gob.NewEncoder(encoded)
-	if err := enc.Encode(*item); err != nil {
-		return nil, errors.Wrap(err, "unable to encode item")
+	if err := enc.Encode(data); err != nil {
+		return nil, err
 	}
 
 	return encoded.Bytes(), nil
 }
 
-func (e *gobEncoding) Decode(data []byte) (*Item, error) {
-	dec := gob.NewDecoder(bytes.NewReader(data))
-	var item Item
-	if err := dec.Decode(&item); err != nil {
-		return nil, errors.Wrap(err, "unable to decode item")
-	}
-
-	return &item, nil
-
+func (e *gobEncoding) Decode(b []byte, data interface{}) error {
+	dec := gob.NewDecoder(bytes.NewReader(b))
+	return dec.Decode(data)
 }

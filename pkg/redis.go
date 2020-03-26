@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"time"
+
 	"github.com/go-redis/redis/v7"
 )
 
@@ -15,37 +17,36 @@ type redisClient struct {
 	encoding Encoding
 }
 
-func (c *redisClient) Get(key string) (*Item, error) {
+func (c *redisClient) Get(key string, data interface{}) error {
 	cmd := c.client.Get(key)
-	data, err := cmd.Bytes()
+	b, err := cmd.Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, nil
+			return nil
 		}
-		return nil, err
+		return err
 	}
 
-	item, err := c.encoding.Decode(data)
-	return item, err
+	return c.encoding.Decode(b, data)
 }
 
-func (c *redisClient) Set(key string, item *Item) error {
-	data, err := c.encoding.Encode(item)
+func (c *redisClient) Set(key string, data interface{}, expiration time.Time) error {
+	data, err := c.encoding.Encode(data)
 	if err != nil {
 		return err
 	}
 
-	cmd := c.client.Set(key, data, item.Duration())
+	cmd := c.client.Set(key, data, TtlForExpiration(expiration))
 	return cmd.Err()
 }
 
-func (c *redisClient) Add(key string, item *Item) error {
-	data, err := c.encoding.Encode(item)
+func (c *redisClient) Add(key string, data interface{}, expiration time.Time) error {
+	b, err := c.encoding.Encode(data)
 	if err != nil {
 		return err
 	}
 
-	cmd := c.client.SetNX(key, data, item.Duration())
+	cmd := c.client.SetNX(key, b, TtlForExpiration(expiration))
 	if !cmd.Val() {
 		return ErrNotStored
 	}

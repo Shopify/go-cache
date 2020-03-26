@@ -14,94 +14,85 @@ func testClient(t *testing.T, client Client) {
 
 	t.Run("get not existing", func(t *testing.T) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
-		item, err := client.Get(testKey)
-		require.Nil(t, item)
+		var data interface{}
+		err := client.Get(testKey, &data)
+		require.Nil(t, data)
 		require.NoError(t, err)
 	})
 
 	t.Run("set", func(t *testing.T) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 		for _, data := range []int{123, 124} {
-			stored := &Item{
-				Expiration: time.Now().Add(1 * time.Second),
-				Data:       data,
-			}
-
-			err := client.Set(testKey, stored)
+			err := client.Set(testKey, data, time.Now().Add(1 * time.Second))
 			require.NoError(t, err)
 
-			loaded, err := client.Get(testKey)
+			var loaded int
+			err = client.Get(testKey, &loaded)
 			require.NoError(t, err)
-			require.Equal(t, stored.Data, loaded.Data)
+			require.Equal(t, data, loaded)
 		}
 	})
 
 	t.Run("add", func(t *testing.T) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
-		stored := &Item{
-			Expiration: time.Now().Add(1 * time.Second),
-			Data:       123,
-		}
+		data := 123
 
-		err := client.Add(testKey, stored)
+		err := client.Add(testKey, data, time.Now().Add(1 * time.Second))
 		require.NoError(t, err)
 
-		loaded, err := client.Get(testKey)
+		var loaded int
+		err = client.Get(testKey, &loaded)
 		require.NoError(t, err)
-		require.Equal(t, stored.Data, loaded.Data)
+		require.Equal(t, data, loaded)
 
-		stored2 := &Item{
-			Expiration: time.Now().Add(1 * time.Second),
-			Data:       124,
-		}
-		err = client.Add(testKey, stored2)
+		data2 := 124
+		err = client.Add(testKey, data2, time.Now().Add(1 * time.Second))
 		require.EqualError(t, err, "not stored")
 
-		loaded, err = client.Get(testKey)
+		var loaded2 int
+		err = client.Get(testKey, &loaded2)
 		require.NoError(t, err)
-		require.Equal(t, stored.Data, loaded.Data)
+		require.Equal(t, data, loaded2)
 	})
 
 	t.Run("delete", func(t *testing.T) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
-		stored := &Item{
-			Expiration: time.Now().Add(1 * time.Second),
-			Data:       123,
-		}
+		stored := 123
 
-		err := client.Set(testKey, stored)
+		err := client.Set(testKey, stored, time.Now().Add(1 * time.Second))
 		require.NoError(t, err)
 
-		loaded, err := client.Get(testKey)
+		var loaded int
+		err = client.Get(testKey, &loaded)
 		require.NoError(t, err)
-		require.Equal(t, stored.Data, loaded.Data)
+		require.Equal(t, loaded, loaded)
 
 		err = client.Delete(testKey)
 		require.NoError(t, err)
 
-		loaded, err = client.Get(testKey)
+		var loaded2 int
+		err = client.Get(testKey, &loaded2)
+		require.Zero(t, loaded2)
 		require.NoError(t, err)
-		require.Nil(t, loaded)
 	})
 
 	t.Run("expire", func(t *testing.T) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
-		stored := &Item{
-			Expiration: time.Now().Add(1 * time.Second),
-			Data:       123,
-		}
+		stored := 123
 
-		err := client.Set(testKey, stored)
+		err := client.Set(testKey, stored, time.Now().Add(1 * time.Second))
 		require.NoError(t, err)
 
-		loaded, err := client.Get(testKey)
+		var loaded int
+		err = client.Get(testKey, &loaded)
 		require.NoError(t, err)
-		require.Equal(t, stored.Data, loaded.Data)
+		require.Equal(t, loaded, loaded)
 
 		time.Sleep(1 * time.Second)
 
-		loaded, err = client.Get(testKey)
+		var loaded2 int
+		err = client.Get(testKey, &loaded2)
+		require.Zero(t, loaded2)
 		require.NoError(t, err)
-		require.Nil(t, loaded)
 	})
 }

@@ -1,11 +1,11 @@
 package cache
 
 type Encoder interface {
-	Encode(*Item) ([]byte, error)
+	Encode(data interface{}) ([]byte, error)
 }
 
 type Decoder interface {
-	Decode([]byte) (*Item, error)
+	Decode(b []byte, data interface{}) error
 }
 
 type Encoding interface {
