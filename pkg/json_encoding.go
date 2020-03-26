@@ -17,5 +17,8 @@ func (e *jsonEncoding) Encode(data interface{}) ([]byte, error) {
 }
 
 func (e *jsonEncoding) Decode(b []byte, data interface{}) error {
+	if !isPointer(data) {
+		return ErrNotAPointer
+	}
 	return json.Unmarshal(b, data)
 }

@@ -1,6 +1,9 @@
 package cache
 
-import "time"
+import (
+	"reflect"
+	"time"
+)
 
 // Client is inspired from *memcached.Client
 type Client interface {
@@ -26,4 +29,13 @@ func TtlForExpiration(t time.Time) time.Duration {
 	}
 
 	return time.Until(t)
+}
+
+func isPointer(data interface{}) bool {
+	switch reflect.ValueOf(data).Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return true
+	default:
+		return false
+	}
 }

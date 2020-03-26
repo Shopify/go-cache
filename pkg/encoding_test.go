@@ -97,4 +97,26 @@ func testEncoding(t *testing.T, encoding Encoding) {
 		require.NoError(t, err)
 		require.EqualValues(t, item, dec)
 	})
+
+	t.Run("not a pointer", func(t *testing.T) {
+		enc, err := encoding.Encode("123")
+		require.NoError(t, err)
+		require.NotNil(t, enc)
+
+		var dec string
+		err = encoding.Decode(enc, dec)
+		require.EqualError(t, err, "argument to Get() must be a pointer")
+		require.Zero(t, dec)
+	})
+
+	t.Run("wrong type", func(t *testing.T) {
+		enc, err := encoding.Encode("123")
+		require.NoError(t, err)
+		require.NotNil(t, enc)
+
+		var dec int
+		err = encoding.Decode(enc, &dec)
+		require.Error(t, err)
+		require.Zero(t, dec)
+	})
 }

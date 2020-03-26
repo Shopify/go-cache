@@ -24,6 +24,9 @@ func (e *gobEncoding) Encode(data interface{}) ([]byte, error) {
 }
 
 func (e *gobEncoding) Decode(b []byte, data interface{}) error {
+	if !isPointer(data) {
+		return ErrNotAPointer
+	}
 	dec := gob.NewDecoder(bytes.NewReader(b))
 	return dec.Decode(data)
 }

@@ -25,6 +25,10 @@ func (c *memoryClient) Get(key string, data interface{}) error {
 	if item, ok := c.data.Load(key); ok {
 		mItem := item.(memoryData)
 		if mItem.expiration.IsZero() || mItem.expiration.After(time.Now()) {
+			if !isPointer(data) {
+				return ErrNotAPointer
+			}
+
 			reflect.ValueOf(data).Elem().Set(reflect.ValueOf(mItem.data))
 			return nil
 		}
