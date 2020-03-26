@@ -21,7 +21,21 @@ type Client interface {
 
 	// Delete deletes the item with the provided key, if it exists.
 	Delete(key string) error
+
+	// Increment adds delta to the currently stored number
+	// If the key does not exist, it will be initialized to 0 with no expiration.
+	// If the value overflows, it will loop around from 0
+	// For many client implementations, you need to be using a LiteralEncoding for this feature to work
+	Increment(key string, delta uint64) (uint64, error)
+
+	// Decrement subtracts delta to the currently stored number
+	// If the key does not exist, it will be initialized to 0 with no expiration, which will make it overflow.
+	// If the value overflows, it will loop around from MaxUint64
+	// For many client implementations, you need to be using a LiteralEncoding for this feature to work
+	Decrement(key string, delta uint64) (uint64, error)
 }
+
+var NeverExpire time.Time
 
 func TtlForExpiration(t time.Time) time.Duration {
 	if t.IsZero() {

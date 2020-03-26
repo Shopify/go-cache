@@ -57,3 +57,15 @@ func (c *redisClient) Delete(key string) error {
 	err := c.client.Del(key)
 	return err.Err()
 }
+
+func (c *redisClient) Increment(key string, delta uint64) (uint64, error) {
+	cmd := c.client.IncrBy(key, int64(delta))
+	val, err := cmd.Result()
+	return uint64(val), err
+}
+
+func (c *redisClient) Decrement(key string, delta uint64) (uint64, error) {
+	cmd := c.client.DecrBy(key, int64(delta))
+	val, err := cmd.Result()
+	return uint64(val), err
+}

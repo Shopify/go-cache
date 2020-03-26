@@ -5,5 +5,5 @@ import (
 )
 
 func TestMemoryClient(t *testing.T) {
-	testClient(t, NewMemoryClient())
+	testClient(t, NewMemoryClient(), nil)
 }
