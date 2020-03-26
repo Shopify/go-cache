@@ -16,8 +16,8 @@ func testClient(t *testing.T, client Client) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 		var data interface{}
 		err := client.Get(testKey, &data)
-		require.Nil(t, data)
-		require.NoError(t, err)
+		require.Zero(t, data)
+		require.EqualError(t, err, "cache miss")
 	})
 
 	t.Run("set", func(t *testing.T) {
@@ -73,7 +73,7 @@ func testClient(t *testing.T, client Client) {
 		var loaded2 int
 		err = client.Get(testKey, &loaded2)
 		require.Zero(t, loaded2)
-		require.NoError(t, err)
+		require.EqualError(t, err, "cache miss")
 	})
 
 	t.Run("expire", func(t *testing.T) {
@@ -88,11 +88,11 @@ func testClient(t *testing.T, client Client) {
 		require.NoError(t, err)
 		require.Equal(t, loaded, loaded)
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(1500 * time.Millisecond)
 
 		var loaded2 int
 		err = client.Get(testKey, &loaded2)
 		require.Zero(t, loaded2)
-		require.NoError(t, err)
+		require.EqualError(t, err, "cache miss")
 	})
 }

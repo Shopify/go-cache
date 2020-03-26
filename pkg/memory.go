@@ -26,10 +26,10 @@ func (c *memoryClient) Get(key string, data interface{}) error {
 		mItem := item.(memoryData)
 		if mItem.expiration.IsZero() || mItem.expiration.After(time.Now()) {
 			reflect.ValueOf(data).Elem().Set(reflect.ValueOf(mItem.data))
+			return nil
 		}
 	}
-	return nil
-
+	return ErrCacheMiss
 }
 
 func (c *memoryClient) Set(key string, data interface{}, expiration time.Time) error {

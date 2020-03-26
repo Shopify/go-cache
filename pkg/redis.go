@@ -22,7 +22,7 @@ func (c *redisClient) Get(key string, data interface{}) error {
 	b, err := cmd.Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return nil
+			return ErrCacheMiss
 		}
 		return err
 	}

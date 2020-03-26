@@ -24,7 +24,7 @@ func (c *memcacheClient) Get(key string, data interface{}) error {
 	if err != nil {
 		// Abstract the memcache-specific error
 		if err == memcache.ErrCacheMiss {
-			err = nil
+			return ErrCacheMiss
 		}
 		return coalesceTimeoutError(err)
 	}
