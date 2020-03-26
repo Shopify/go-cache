@@ -1,6 +1,15 @@
 package cache
 
-import "sync"
+import (
+	"reflect"
+	"sync"
+	"time"
+)
+
+type memoryData struct {
+	data       interface{}
+	expiration time.Time
+}
 
 type memoryClient struct {
 	data sync.Map
@@ -8,28 +17,40 @@ type memoryClient struct {
 
 // NewMemoryClient returns a Client that only stores in memory.
 // Useful for stubbing tests.
-// Note that it does not honour expiration.
 func NewMemoryClient() Client {
 	return &memoryClient{}
 }
 
-func (c *memoryClient) Get(key string) (*Item, error) {
-	item, ok := c.data.Load(key)
-	if !ok {
-		return nil, nil
-	}
-	return item.(*Item), nil
+func (c *memoryClient) Get(key string, data interface{}) error {
+	if item, ok := c.data.Load(key); ok {
+		mItem := item.(memoryData)
+		if mItem.expiration.IsZero() || mItem.expiration.After(time.Now()) {
+			if !isPointer(data) {
+				return ErrNotAPointer
+			}
 
+			reflect.ValueOf(data).Elem().Set(reflect.ValueOf(mItem.data))
+			return nil
+		}
+	}
+	return ErrCacheMiss
 }
 
-func (c *memoryClient) Set(key string, item *Item) error {
-	c.data.Store(key, item)
+func (c *memoryClient) Set(key string, data interface{}, expiration time.Time) error {
+	c.data.Store(key, memoryData{
+		data:       data,
+		expiration: expiration,
+	})
 	return nil
 }
 
-func (c *memoryClient) Add(key string, item *Item) error {
-	_, loaded := c.data.LoadOrStore(key, item)
+func (c *memoryClient) Add(key string, data interface{}, expiration time.Time) error {
+	_, loaded := c.data.LoadOrStore(key, memoryData{
+		data:       data,
+		expiration: expiration,
+	})
 	if loaded {
+		// TODO: handle when the conflicting data is expired
 		return ErrNotStored
 	}
 	return nil

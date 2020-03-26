@@ -3,6 +3,7 @@ package cache
 import (
 	"math"
 	"net"
+	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
 )
@@ -18,29 +19,29 @@ type memcacheClient struct {
 	encoding Encoding
 }
 
-func (c *memcacheClient) Get(key string) (*Item, error) {
+func (c *memcacheClient) Get(key string, data interface{}) error {
 	mItem, err := c.client.Get(key)
 	if err != nil {
 		// Abstract the memcache-specific error
 		if err == memcache.ErrCacheMiss {
-			err = nil
+			return ErrCacheMiss
 		}
-		return nil, coalesceTimeoutError(err)
+		return coalesceTimeoutError(err)
 	}
 
-	return c.decodeItem(mItem)
+	return c.encoding.Decode(mItem.Value, data)
 }
 
-func (c *memcacheClient) Set(key string, item *Item) error {
-	mItem, err := c.encodeItem(key, item)
+func (c *memcacheClient) Set(key string, data interface{}, expiration time.Time) error {
+	mItem, err := c.encodeItem(key, data, expiration)
 	if err != nil {
 		return err
 	}
 	return coalesceTimeoutError(c.client.Set(mItem))
 }
 
-func (c *memcacheClient) Add(key string, item *Item) error {
-	mItem, err := c.encodeItem(key, item)
+func (c *memcacheClient) Add(key string, data interface{}, expiration time.Time) error {
+	mItem, err := c.encodeItem(key, data, expiration)
 	if err != nil {
 		return err
 	}
@@ -62,12 +63,8 @@ func (c *memcacheClient) Delete(key string) error {
 	return coalesceTimeoutError(err)
 }
 
-func (c *memcacheClient) decodeItem(mItem *memcache.Item) (*Item, error) {
-	return c.encoding.Decode(mItem.Value)
-}
-
-func (c *memcacheClient) encodeItem(key string, item *Item) (*memcache.Item, error) {
-	encoded, err := c.encoding.Encode(item)
+func (c *memcacheClient) encodeItem(key string, data interface{}, expiration time.Time) (*memcache.Item, error) {
+	encoded, err := c.encoding.Encode(data)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +73,8 @@ func (c *memcacheClient) encodeItem(key string, item *Item) (*memcache.Item, err
 		Value: encoded,
 		Key:   key,
 	}
-	if item.Duration() != 0 {
-		mItem.Expiration = int32(math.Max(item.Duration().Seconds(), 1))
+	if ttl := TtlForExpiration(expiration); ttl != 0 {
+		mItem.Expiration = int32(math.Max(ttl.Seconds(), 1))
 	}
 
 	return mItem, nil
