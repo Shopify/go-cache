@@ -13,12 +13,12 @@ import (
 
 func ExampleNewMemcacheClient() {
 	memcacheClient := memcache.New("localhost:11211")
-	NewMemcacheClient(memcacheClient)
+	NewMemcacheClient(memcacheClient, DefaultEncoding)
 }
 
 const defaultMemcachedPort = 11211
 
-func testMemcached(t *testing.T) Client {
+func testMemcached(t *testing.T) *memcache.Client {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -36,11 +36,22 @@ func testMemcached(t *testing.T) Client {
 		}
 	}
 
-	return NewMemcacheClient(memcache.New(servers...))
+	return memcache.New(servers...)
 }
 
 func Test_memcacheClient(t *testing.T) {
-	testClient(t, testMemcached(t))
+	client := testMemcached(t)
+	encodings := map[string]Encoding{
+		"gob":     GobEncoding,
+		"json":    JsonEncoding,
+		"literal+gob": NewLiteralEncoding(GobEncoding),
+		"literal+json": NewLiteralEncoding(JsonEncoding),
+	}
+	for name, encoding := range encodings {
+		t.Run(name, func(t *testing.T) {
+			testClient(t, NewMemcacheClient(client, encoding), encoding)
+		})
+	}
 }
 
 func Test_coalesceTimeoutError(t *testing.T) {

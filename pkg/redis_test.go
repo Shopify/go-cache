@@ -17,7 +17,7 @@ func ExampleNewRedisClient() {
 	NewRedisClient(client, DefaultEncoding)
 }
 
-func testRedis(t *testing.T) Client {
+func testRedis(t *testing.T) *redis.Client {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -30,10 +30,21 @@ func testRedis(t *testing.T) Client {
 
 	opts, err := redis.ParseURL(url)
 	require.NoError(t, err)
-
-	return NewRedisClient(redis.NewClient(opts), DefaultEncoding)
+	return redis.NewClient(opts)
 }
 
 func Test_redisClient(t *testing.T) {
-	testClient(t, testRedis(t))
+	client := testRedis(t)
+	encodings := map[string]Encoding{
+		"gob":     GobEncoding,
+		"json":    JsonEncoding,
+		"literal+gob": NewLiteralEncoding(GobEncoding),
+		"literal+json": NewLiteralEncoding(JsonEncoding),
+	}
+	for name, encoding := range encodings {
+		t.Run(name, func(t *testing.T) {
+			testClient(t, NewRedisClient(client, encoding), encoding)
+		})
+	}
+
 }

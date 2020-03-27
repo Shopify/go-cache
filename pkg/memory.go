@@ -54,3 +54,40 @@ func (c *memoryClient) Delete(key string) error {
 	c.data.Delete(key)
 	return nil
 }
+
+func (c *memoryClient) getInt(key string) (uint64, time.Time, error) {
+	var curr uint64
+	var expiration time.Time
+	if item, ok := c.data.Load(key); ok {
+		mItem := item.(memoryData)
+		if curr, ok = mItem.data.(uint64); !ok {
+			return 0, expiration, ErrNotANumber
+		}
+		expiration = mItem.expiration
+	}
+	return curr, expiration, nil
+}
+
+func (c *memoryClient) Increment(key string, delta uint64) (uint64, error) {
+	// TODO: definitely not thread-safe
+	curr, expiration, err := c.getInt(key)
+	if err != nil {
+		return 0, err
+	}
+
+	curr += delta
+	err = c.Set(key, curr, expiration)
+	return curr, err
+}
+
+func (c *memoryClient) Decrement(key string, delta uint64) (uint64, error) {
+	// TODO: definitely not thread-safe
+	curr, expiration, err := c.getInt(key)
+	if err != nil {
+		return 0, err
+	}
+
+	curr -= delta
+	err = c.Set(key, curr, expiration)
+	return curr, err
+}

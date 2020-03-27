@@ -10,8 +10,8 @@ import (
 
 var _ Client = &memcacheClient{}
 
-func NewMemcacheClient(c *memcache.Client) *memcacheClient {
-	return &memcacheClient{client: c, encoding: GobEncoding}
+func NewMemcacheClient(c *memcache.Client, encoding Encoding) *memcacheClient {
+	return &memcacheClient{client: c, encoding: encoding}
 }
 
 type memcacheClient struct {
@@ -61,6 +61,34 @@ func (c *memcacheClient) Delete(key string) error {
 		return nil
 	}
 	return coalesceTimeoutError(err)
+}
+
+func (c *memcacheClient) Increment(key string, delta uint64) (uint64, error) {
+	newValue, err := c.client.Increment(key, delta)
+	if err == memcache.ErrCacheMiss {
+		// Initialize
+		err = c.Add(key, delta, NeverExpire)
+		if err == ErrNotStored {
+			// Race condition, try increment again
+			return c.Increment(key, delta)
+		}
+		newValue = delta
+	}
+	return newValue, coalesceTimeoutError(err)
+}
+
+func (c *memcacheClient) Decrement(key string, delta uint64) (uint64, error) {
+	newValue, err := c.client.Decrement(key, delta)
+	if err == memcache.ErrCacheMiss {
+		// Initialize
+		err = c.Add(key, -delta, NeverExpire)
+		if err == ErrNotStored {
+			// Race condition, try increment again
+			return c.Decrement(key, delta)
+		}
+		newValue = -delta
+	}
+	return newValue, coalesceTimeoutError(err)
 }
 
 func (c *memcacheClient) encodeItem(key string, data interface{}, expiration time.Time) (*memcache.Item, error) {
