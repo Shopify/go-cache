@@ -31,6 +31,15 @@ func TtlForExpiration(t time.Time) time.Duration {
 	return time.Until(t)
 }
 
+func setPointerValue(ptr interface{}, value interface{}) error {
+	if !isPointer(ptr) {
+		return ErrNotAPointer
+	}
+
+	reflect.ValueOf(ptr).Elem().Set(reflect.ValueOf(value))
+	return nil
+}
+
 func isPointer(data interface{}) bool {
 	switch reflect.ValueOf(data).Kind() {
 	case reflect.Ptr, reflect.Interface:
