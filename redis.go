@@ -1,9 +1,10 @@
 package cache
 
 import (
+	"context"
 	"time"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 )
 
 var _ Client = &redisClient{}
@@ -18,7 +19,7 @@ type redisClient struct {
 }
 
 func (c *redisClient) Get(key string, data interface{}) error {
-	cmd := c.client.Get(key)
+	cmd := c.client.Get(context.Background(), key)
 	b, err := cmd.Bytes()
 	if err != nil {
 		if err == redis.Nil {
@@ -36,7 +37,7 @@ func (c *redisClient) Set(key string, data interface{}, expiration time.Time) er
 		return err
 	}
 
-	cmd := c.client.Set(key, data, TtlForExpiration(expiration))
+	cmd := c.client.Set(context.Background(), key, data, TtlForExpiration(expiration))
 	return cmd.Err()
 }
 
@@ -46,7 +47,7 @@ func (c *redisClient) Add(key string, data interface{}, expiration time.Time) er
 		return err
 	}
 
-	cmd := c.client.SetNX(key, b, TtlForExpiration(expiration))
+	cmd := c.client.SetNX(context.Background(), key, b, TtlForExpiration(expiration))
 	if !cmd.Val() {
 		return ErrNotStored
 	}
@@ -54,18 +55,18 @@ func (c *redisClient) Add(key string, data interface{}, expiration time.Time) er
 }
 
 func (c *redisClient) Delete(key string) error {
-	err := c.client.Del(key)
+	err := c.client.Del(context.Background(), key)
 	return err.Err()
 }
 
 func (c *redisClient) Increment(key string, delta uint64) (uint64, error) {
-	cmd := c.client.IncrBy(key, int64(delta))
+	cmd := c.client.IncrBy(context.Background(), key, int64(delta))
 	val, err := cmd.Result()
 	return uint64(val), err
 }
 
 func (c *redisClient) Decrement(key string, delta uint64) (uint64, error) {
-	cmd := c.client.DecrBy(key, int64(delta))
+	cmd := c.client.DecrBy(context.Background(), key, int64(delta))
 	val, err := cmd.Result()
 	return uint64(val), err
 }

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,9 +36,9 @@ func testRedis(t *testing.T) *redis.Client {
 func Test_redisClient(t *testing.T) {
 	client := testRedis(t)
 	encodings := map[string]Encoding{
-		"gob":     GobEncoding,
-		"json":    JsonEncoding,
-		"literal+gob": NewLiteralEncoding(GobEncoding),
+		"gob":          GobEncoding,
+		"json":         JsonEncoding,
+		"literal+gob":  NewLiteralEncoding(GobEncoding),
 		"literal+json": NewLiteralEncoding(JsonEncoding),
 	}
 	for name, encoding := range encodings {
