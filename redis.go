@@ -4,18 +4,19 @@ import (
 	"context"
 	"time"
 
+	"github.com/Shopify/go-encoding"
 	"github.com/go-redis/redis/v8"
 )
 
 var _ Client = &redisClient{}
 
-func NewRedisClient(c *redis.Client, encoding Encoding) *redisClient {
-	return &redisClient{client: c, encoding: encoding}
+func NewRedisClient(c *redis.Client, enc encoding.ValueEncoding) *redisClient {
+	return &redisClient{client: c, encoding: enc}
 }
 
 type redisClient struct {
 	client   *redis.Client
-	encoding Encoding
+	encoding encoding.ValueEncoding
 }
 
 func (c *redisClient) Get(key string, data interface{}) error {

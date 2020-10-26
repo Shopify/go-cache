@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Shopify/go-encoding"
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/stretchr/testify/require"
 )
@@ -41,15 +42,15 @@ func testMemcached(t *testing.T) *memcache.Client {
 
 func Test_memcacheClient(t *testing.T) {
 	client := testMemcached(t)
-	encodings := map[string]Encoding{
-		"gob":     GobEncoding,
-		"json":    JsonEncoding,
-		"literal+gob": NewLiteralEncoding(GobEncoding),
-		"literal+json": NewLiteralEncoding(JsonEncoding),
+	encodings := map[string]encoding.ValueEncoding{
+		"gob":          gobEncoding,
+		"json":         encoding.JSONEncoding,
+		"literal+gob":  encoding.NewLiteralEncoding(gobEncoding),
+		"literal+json": encoding.NewLiteralEncoding(encoding.JSONEncoding),
 	}
-	for name, encoding := range encodings {
+	for name, enc := range encodings {
 		t.Run(name, func(t *testing.T) {
-			testClient(t, NewMemcacheClient(client, encoding), encoding)
+			testClient(t, NewMemcacheClient(client, enc), enc)
 		})
 	}
 }
