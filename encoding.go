@@ -1,16 +1,29 @@
 package cache
 
-type Encoder interface {
-	Encode(data interface{}) ([]byte, error)
-}
+import "github.com/Shopify/go-encoding"
 
-type Decoder interface {
-	Decode(b []byte, data interface{}) error
-}
+// This file provides backwards compatibility for when these encodings were provided by this package.
+// Can all be removed in v2
 
-type Encoding interface {
-	Encoder
-	Decoder
-}
+// Deprecated: Use encoding.ValueEncoder
+type Encoder encoding.ValueEncoder
 
-var DefaultEncoding = GobEncoding
+// Deprecated: Use encoding.ValueDecoder
+type Decoder encoding.ValueDecoder
+
+// Deprecated: Use encoding.ValueEncoding
+type Encoding encoding.ValueEncoding
+
+var (
+	gobEncoding     = encoding.NewValueEncoding(encoding.GobEncoding)
+	DefaultEncoding = gobEncoding
+
+	// Deprecated: Use encoding.GobEncoding
+	GobEncoding = gobEncoding
+
+	// Deprecated: Use encoding.JSONEncoding
+	JsonEncoding = encoding.JSONEncoding
+
+	// Deprecated: Use encoding.NewLiteralEncoding
+	NewLiteralEncoding = encoding.NewLiteralEncoding
+)
