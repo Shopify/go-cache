@@ -5,18 +5,19 @@ import (
 	"net"
 	"time"
 
+	"github.com/Shopify/go-encoding"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
 var _ Client = &memcacheClient{}
 
-func NewMemcacheClient(c *memcache.Client, encoding Encoding) *memcacheClient {
-	return &memcacheClient{client: c, encoding: encoding}
+func NewMemcacheClient(c *memcache.Client, enc encoding.ValueEncoding) *memcacheClient {
+	return &memcacheClient{client: c, encoding: enc}
 }
 
 type memcacheClient struct {
 	client   *memcache.Client
-	encoding Encoding
+	encoding encoding.ValueEncoding
 }
 
 func (c *memcacheClient) Get(key string, data interface{}) error {
