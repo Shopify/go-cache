@@ -24,7 +24,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 	t.Run("set", func(t *testing.T) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 		for _, data := range []int{123, 124} {
-			err := client.Set(testKey, data, time.Now().Add(1 * time.Second))
+			err := client.Set(testKey, data, time.Now().Add(1*time.Second))
 			require.NoError(t, err)
 
 			var loaded int
@@ -38,7 +38,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 		data := 123
 
-		err := client.Add(testKey, data, time.Now().Add(1 * time.Second))
+		err := client.Add(testKey, data, time.Now().Add(1*time.Second))
 		require.NoError(t, err)
 
 		var loaded int
@@ -47,7 +47,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 		require.Equal(t, data, loaded)
 
 		data2 := 124
-		err = client.Add(testKey, data2, time.Now().Add(1 * time.Second))
+		err = client.Add(testKey, data2, time.Now().Add(1*time.Second))
 		require.EqualError(t, err, "not stored")
 
 		var loaded2 int
@@ -60,7 +60,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 		stored := 123
 
-		err := client.Set(testKey, stored, time.Now().Add(1 * time.Second))
+		err := client.Set(testKey, stored, time.Now().Add(1*time.Second))
 		require.NoError(t, err)
 
 		var loaded int
@@ -85,7 +85,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 		stored := 123
 
-		err := client.Set(testKey, stored, time.Now().Add(1 * time.Second))
+		err := client.Set(testKey, stored, time.Now().Add(1*time.Second))
 		require.NoError(t, err)
 
 		var loaded int
@@ -137,7 +137,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 		}
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
 
-		err := client.Set(testKey, uint64(123), time.Now().Add(1 * time.Second))
+		err := client.Set(testKey, uint64(123), time.Now().Add(1*time.Second))
 		require.NoError(t, err)
 
 		newVal, err := client.Decrement(testKey, 10)
@@ -153,6 +153,6 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 
 		newVal, err := client.Decrement(testKey, 10)
 		require.NoError(t, err)
-		require.Equal(t, math.MaxUint64 - uint64(9), newVal)
+		require.Equal(t, math.MaxUint64-uint64(9), newVal)
 	})
 }
