@@ -9,9 +9,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-var _ Client = &memcacheClient{}
-
-func NewMemcacheClient(c *memcache.Client, enc encoding.ValueEncoding) *memcacheClient {
+func NewMemcacheClient(c *memcache.Client, enc encoding.ValueEncoding) Client {
 	return &memcacheClient{client: c, encoding: enc}
 }
 

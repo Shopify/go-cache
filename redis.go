@@ -8,9 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var _ Client = &redisClient{}
-
-func NewRedisClient(c *redis.Client, enc encoding.ValueEncoding) *redisClient {
+func NewRedisClient(c *redis.Client, enc encoding.ValueEncoding) Client {
 	return &redisClient{client: c, encoding: enc}
 }
 
