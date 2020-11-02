@@ -8,9 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var _ Client = &redisClient{}
-
-func NewRedisClient(c *redis.Client, enc encoding.ValueEncoding) *redisClient {
+func NewRedisClient(c *redis.Client, enc encoding.ValueEncoding) Client {
 	return &redisClient{client: c, encoding: enc}
 }
 
@@ -38,7 +36,7 @@ func (c *redisClient) Set(key string, data interface{}, expiration time.Time) er
 		return err
 	}
 
-	cmd := c.client.Set(context.Background(), key, data, TtlForExpiration(expiration))
+	cmd := c.client.Set(context.Background(), key, data, ttlForExpiration(expiration))
 	return cmd.Err()
 }
 
@@ -48,7 +46,7 @@ func (c *redisClient) Add(key string, data interface{}, expiration time.Time) er
 		return err
 	}
 
-	cmd := c.client.SetNX(context.Background(), key, b, TtlForExpiration(expiration))
+	cmd := c.client.SetNX(context.Background(), key, b, ttlForExpiration(expiration))
 	if !cmd.Val() {
 		return ErrNotStored
 	}
