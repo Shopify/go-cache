@@ -37,7 +37,12 @@ type Client interface {
 
 var NeverExpire time.Time
 
+// Deprecated: Do not use the exported function
 func TtlForExpiration(t time.Time) time.Duration {
+	return ttlForExpiration(t)
+}
+
+func ttlForExpiration(t time.Time) time.Duration {
 	if t.IsZero() {
 		return 0
 	}

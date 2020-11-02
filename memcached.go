@@ -102,7 +102,7 @@ func (c *memcacheClient) encodeItem(key string, data interface{}, expiration tim
 		Value: encoded,
 		Key:   key,
 	}
-	if ttl := TtlForExpiration(expiration); ttl != 0 {
+	if ttl := ttlForExpiration(expiration); ttl != 0 {
 		mItem.Expiration = int32(math.Max(ttl.Seconds(), 1))
 	}
 
