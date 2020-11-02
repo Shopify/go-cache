@@ -81,7 +81,13 @@ jobs:
       - name: Memcached Service
         uses: niden/actions-memcached@v7
 
+      - name: Redis Service
+        uses: supercharge/redis-github-action@1.1.0
+        with:
+          redis-version: 6
+
       - name: Test
         run: go test -v -race ./...
         env:
           MEMCACHED_SERVERS: localhost:11211
+          REDIS_URL: redis://localhost:6379
