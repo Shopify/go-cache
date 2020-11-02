@@ -18,12 +18,17 @@ var (
 	gobEncoding     = encoding.NewValueEncoding(encoding.GobEncoding)
 	DefaultEncoding = gobEncoding
 
+	// GobEncoding is a Gob encoding
 	// Deprecated: Use encoding.GobEncoding
 	GobEncoding = gobEncoding
 
+	// JsonEncoding is a JSON encoding
 	// Deprecated: Use encoding.JSONEncoding
+	// nolint:golint
 	JsonEncoding = encoding.JSONEncoding
 
+	// NewLiteralEncoding is an encoding that will try its best to store the data as is,
+	// but fallback on another encoder if not possible.
 	// Deprecated: Use encoding.NewLiteralEncoding
 	NewLiteralEncoding = encoding.NewLiteralEncoding
 )
