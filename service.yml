@@ -1,7 +1,3 @@
-# https://services.shopify.io/services/go-cache/production
-org_line: Production Engineering
-owners:
-- Shopify/dev-infra
 slack_channels:
 - dev-infrastructure
 security:
