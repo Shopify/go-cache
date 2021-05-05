@@ -16,6 +16,6 @@ $ go get github.com/Shopify/go-cache
 
 # Usage
 
-All caches in this package follow a simple [interface](pkg/client.go).
+All caches in this package follow a simple [interface](client.go).
 
 If you want, you may wrap the Client to inject functionality, like a circuit breaker, logging, or metrics.
