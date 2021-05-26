@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"math"
 	"net"
 	"time"
@@ -18,7 +19,7 @@ type memcacheClient struct {
 	encoding encoding.ValueEncoding
 }
 
-func (c *memcacheClient) Get(key string, data interface{}) error {
+func (c *memcacheClient) Get(ctx context.Context, key string, data interface{}) error {
 	mItem, err := c.client.Get(key)
 	if err != nil {
 		// Abstract the memcache-specific error
@@ -31,7 +32,7 @@ func (c *memcacheClient) Get(key string, data interface{}) error {
 	return c.encoding.Decode(mItem.Value, data)
 }
 
-func (c *memcacheClient) Set(key string, data interface{}, expiration time.Time) error {
+func (c *memcacheClient) Set(ctx context.Context, key string, data interface{}, expiration time.Time) error {
 	mItem, err := c.encodeItem(key, data, expiration)
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func (c *memcacheClient) Set(key string, data interface{}, expiration time.Time)
 	return coalesceTimeoutError(c.client.Set(mItem))
 }
 
-func (c *memcacheClient) Add(key string, data interface{}, expiration time.Time) error {
+func (c *memcacheClient) Add(ctx context.Context, key string, data interface{}, expiration time.Time) error {
 	mItem, err := c.encodeItem(key, data, expiration)
 	if err != nil {
 		return err
@@ -53,7 +54,7 @@ func (c *memcacheClient) Add(key string, data interface{}, expiration time.Time)
 	return coalesceTimeoutError(err)
 }
 
-func (c *memcacheClient) Delete(key string) error {
+func (c *memcacheClient) Delete(ctx context.Context, key string) error {
 	err := c.client.Delete(key)
 	if err == memcache.ErrCacheMiss {
 		// Deleting a missing entry is not an actual issue.
@@ -62,28 +63,28 @@ func (c *memcacheClient) Delete(key string) error {
 	return coalesceTimeoutError(err)
 }
 
-func (c *memcacheClient) Increment(key string, delta uint64) (uint64, error) {
+func (c *memcacheClient) Increment(ctx context.Context, key string, delta uint64) (uint64, error) {
 	newValue, err := c.client.Increment(key, delta)
 	if err == memcache.ErrCacheMiss {
 		// Initialize
-		err = c.Add(key, delta, NeverExpire)
+		err = c.Add(context.Background(), key, delta, NeverExpire)
 		if err == ErrNotStored {
 			// Race condition, try increment again
-			return c.Increment(key, delta)
+			return c.Increment(context.Background(), key, delta)
 		}
 		newValue = delta
 	}
 	return newValue, coalesceTimeoutError(err)
 }
 
-func (c *memcacheClient) Decrement(key string, delta uint64) (uint64, error) {
+func (c *memcacheClient) Decrement(ctx context.Context, key string, delta uint64) (uint64, error) {
 	newValue, err := c.client.Decrement(key, delta)
 	if err == memcache.ErrCacheMiss {
 		// Initialize
-		err = c.Add(key, -delta, NeverExpire)
+		err = c.Add(context.Background(), key, -delta, NeverExpire)
 		if err == ErrNotStored {
 			// Race condition, try increment again
-			return c.Decrement(key, delta)
+			return c.Decrement(context.Background(), key, delta)
 		}
 		newValue = -delta
 	}

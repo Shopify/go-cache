@@ -1,5 +1,9 @@
 # Changelog
 
+## v2
+
+- Add context as first argument
+
 ## v1
 
 - First stable release
