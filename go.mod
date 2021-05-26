@@ -1,6 +1,6 @@
 module github.com/Shopify/go-cache
 
-go 1.13
+go 1.15
 
 require (
 	github.com/Shopify/go-encoding v0.0.0-20201030134245-d04c0dbe045f
