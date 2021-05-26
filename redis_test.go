@@ -15,7 +15,7 @@ func ExampleNewRedisClient() {
 		panic(err)
 	}
 	client := redis.NewClient(opts)
-	NewRedisClient(client, DefaultEncoding)
+	NewRedisClient(client, encoding.NewValueEncoding(encoding.GobEncoding))
 }
 
 func testRedis(t *testing.T) *redis.Client {
@@ -36,16 +36,9 @@ func testRedis(t *testing.T) *redis.Client {
 
 func Test_redisClient(t *testing.T) {
 	client := testRedis(t)
-	encodings := map[string]encoding.ValueEncoding{
-		"gob":          gobEncoding,
-		"json":         encoding.JSONEncoding,
-		"literal+gob":  encoding.NewLiteralEncoding(gobEncoding),
-		"literal+json": encoding.NewLiteralEncoding(encoding.JSONEncoding),
-	}
 	for name, enc := range encodings {
 		t.Run(name, func(t *testing.T) {
 			testClient(t, NewRedisClient(client, enc), enc)
 		})
 	}
-
 }

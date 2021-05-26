@@ -3,6 +3,7 @@
 ## v2
 
 - Add context as first argument
+- Remove deprecated encoding, use github.com/Shopify/go-encoding directly instead.
 
 ## v1
 
