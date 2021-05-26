@@ -8,10 +8,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/go-encoding"
 	"github.com/stretchr/testify/require"
 )
 
-func testClient(t *testing.T, client Client, encoding Encoding) {
+var encodings = map[string]encoding.Encoding{
+	"gob":          encoding.NewValueEncoding(encoding.GobEncoding),
+	"json":         encoding.JSONEncoding,
+	"literal+gob":  encoding.NewStreamEncoding(encoding.NewLiteralEncoding(encoding.NewValueEncoding(encoding.GobEncoding))),
+	"literal+json": encoding.NewStreamEncoding(encoding.NewLiteralEncoding(encoding.JSONEncoding)),
+}
+
+func testClient(t *testing.T, client Client, enc encoding.Encoding) {
 	r := rand.NewSource(time.Now().UnixNano())
 	ctx := context.Background()
 
@@ -80,7 +88,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 	})
 
 	t.Run("expire", func(t *testing.T) {
-		if encoding != GobEncoding {
+		if enc != encodings["gob"] {
 			t.Skip("only run expire test once")
 		}
 
@@ -104,7 +112,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 	})
 
 	t.Run("incr", func(t *testing.T) {
-		if encoding == GobEncoding {
+		if enc == encodings["gob"] {
 			t.Skip("gob encoding does not support increment")
 		}
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
@@ -119,7 +127,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 	})
 
 	t.Run("incr overflow", func(t *testing.T) {
-		if encoding == GobEncoding {
+		if enc == encodings["gob"] {
 			t.Skip("gob encoding does not support increment")
 		}
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
@@ -134,7 +142,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 	})
 
 	t.Run("decr", func(t *testing.T) {
-		if encoding == GobEncoding {
+		if enc == encodings["gob"] {
 			t.Skip("gob encoding does not support decrement")
 		}
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())
@@ -148,7 +156,7 @@ func testClient(t *testing.T, client Client, encoding Encoding) {
 	})
 
 	t.Run("decr overflow", func(t *testing.T) {
-		if encoding == GobEncoding {
+		if enc == encodings["gob"] {
 			t.Skip("gob encoding does not support decrement")
 		}
 		testKey := fmt.Sprintf("go-cache-test-%d", r.Int63())

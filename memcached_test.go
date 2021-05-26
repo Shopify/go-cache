@@ -14,7 +14,7 @@ import (
 
 func ExampleNewMemcacheClient() {
 	memcacheClient := memcache.New("localhost:11211")
-	NewMemcacheClient(memcacheClient, DefaultEncoding)
+	NewMemcacheClient(memcacheClient, encoding.NewValueEncoding(encoding.GobEncoding))
 }
 
 const defaultMemcachedPort = 11211
@@ -42,12 +42,6 @@ func testMemcached(t *testing.T) *memcache.Client {
 
 func Test_memcacheClient(t *testing.T) {
 	client := testMemcached(t)
-	encodings := map[string]encoding.ValueEncoding{
-		"gob":          gobEncoding,
-		"json":         encoding.JSONEncoding,
-		"literal+gob":  encoding.NewLiteralEncoding(gobEncoding),
-		"literal+json": encoding.NewLiteralEncoding(encoding.JSONEncoding),
-	}
 	for name, enc := range encodings {
 		t.Run(name, func(t *testing.T) {
 			testClient(t, NewMemcacheClient(client, enc), enc)
