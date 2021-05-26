@@ -5,6 +5,7 @@
 - Add context as first argument
 - Remove deprecated encoding, use github.com/Shopify/go-encoding directly instead.
 - Remove deprecated TtlForExpiration, use `time.Until` instead.
+- Bump required Go version to 1.15
 
 ## v1
 
