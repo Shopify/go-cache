@@ -1,4 +1,4 @@
-module github.com/Shopify/go-cache
+module github.com/Shopify/go-cache/v2
 
 go 1.15
 
