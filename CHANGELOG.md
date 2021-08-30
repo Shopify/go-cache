@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add a `prefixClient` wrapper
+- Add a `cachelock` package, to acquire and release locks on keys using a `cache.Client`
 
 ## [v2.0.1] - 2021-05-26
 ### Changed
