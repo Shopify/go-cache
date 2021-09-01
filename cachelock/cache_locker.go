@@ -16,6 +16,7 @@ const tokenLength = 16
 type cacheLocker struct {
 	client        cache.Client
 	expiration    time.Duration
+	releaseBuffer time.Duration
 	retryStrategy func() RetryAttempt
 }
 
@@ -23,6 +24,7 @@ func New(client cache.Client, expiration time.Duration, retryStrategy RetryStrat
 	return &cacheLocker{
 		client:        client,
 		expiration:    expiration,
+		releaseBuffer: expiration / 100, // Don't attempt to release within 1% of the expiration time, see comments in cacheLock#Release
 		retryStrategy: retryStrategy,
 	}
 }
@@ -42,7 +44,7 @@ func (l *cacheLocker) Acquire(ctx context.Context, key string) (Lock, error) {
 	for {
 		err := l.client.Add(ctx, key, token, expiration)
 		if err == nil {
-			return &cacheLock{client: l.client, key: key, token: token}, nil
+			return &cacheLock{client: l.client, key: key, token: token, deadline: expiration.Add(-l.releaseBuffer)}, nil
 		} else if !errors.Is(err, cache.ErrNotStored) {
 			return nil, fmt.Errorf("locking: %w", err)
 		}
@@ -78,12 +80,19 @@ func randomToken(length int) (string, error) {
 }
 
 type cacheLock struct {
-	client cache.Client
-	key    string
-	token  string
+	client   cache.Client
+	key      string
+	token    string
+	deadline time.Time
 }
 
 func (r *cacheLock) Release(ctx context.Context) error {
+	// Use the same expiration for the release as the original lock
+	// This helps prevent issues where the lock would be retrieved, but expired before this thread would have a chance to release it.
+	// If another thread were to acquire the lock after it expired, but before this thread would release it, this thread would end up releasing the other thread's lock.
+	ctx, cancel := context.WithDeadline(ctx, r.deadline)
+	defer cancel()
+
 	var stored string
 	err := r.client.Get(ctx, r.key, &stored)
 	if err != nil {
@@ -94,6 +103,11 @@ func (r *cacheLock) Release(ctx context.Context) error {
 	}
 
 	if stored != r.token {
+		return ErrNotReleased
+	}
+
+	if ctx.Err() != nil {
+		// The context is done, we won't have enough time to safely release the lock before it expires, so don't, to avoid releasing another thread's lock, as described above.
 		return ErrNotReleased
 	}
 
