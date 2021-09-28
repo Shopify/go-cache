@@ -19,7 +19,7 @@ func (m *Mock) Get(ctx context.Context, key string, data interface{}) error {
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	return nil
+	return args.Error(0)
 }
 
 func (m *Mock) Set(ctx context.Context, key string, data interface{}, expiration time.Time) error {
@@ -27,7 +27,7 @@ func (m *Mock) Set(ctx context.Context, key string, data interface{}, expiration
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	return nil
+	return args.Error(0)
 }
 
 func (m *Mock) Add(ctx context.Context, key string, data interface{}, expiration time.Time) error {
@@ -35,7 +35,7 @@ func (m *Mock) Add(ctx context.Context, key string, data interface{}, expiration
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	return nil
+	return args.Error(0)
 }
 
 func (m *Mock) Delete(ctx context.Context, key string) error {
@@ -43,7 +43,7 @@ func (m *Mock) Delete(ctx context.Context, key string) error {
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	return nil
+	return args.Error(0)
 }
 
 func (m *Mock) getInt(key string) (uint64, time.Time, error) {
