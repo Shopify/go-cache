@@ -9,7 +9,7 @@ import (
 // Client is inspired from *memcached.Client
 type Client interface {
 	// Get gets the item for the given key.
-	// Returns nil for a cache miss.
+	// Returns ErrCacheMiss for a cache miss.
 	// The key must be at most 250 bytes in length.
 	Get(ctx context.Context, key string, data interface{}) error
 
