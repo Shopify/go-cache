@@ -80,13 +80,13 @@ func AttemptBoundRetryStrategy(maxAttempts int, retryStrategy RetryStrategy) Ret
 		panic("max attempts must be greater than 0")
 	}
 	return func() RetryAttempt {
-		return &attemptBoundRetryAttempt{maxAttempts: maxAttempts, retryAttempt: retryStrategy()}
+		return &attemptBoundRetryAttempt{maxAttempts: uint64(maxAttempts), retryAttempt: retryStrategy()}
 	}
 }
 
 type attemptBoundRetryAttempt struct {
-	attempts     int
-	maxAttempts  int
+	attempts     uint64
+	maxAttempts  uint64
 	retryAttempt RetryAttempt
 }
 
@@ -94,6 +94,6 @@ func (r *attemptBoundRetryAttempt) NextBackoff() time.Duration {
 	if r.attempts >= r.maxAttempts {
 		return NoRetry().NextBackoff()
 	}
-	r.attempts++
+	atomic.AddUint64(&r.attempts, 1)
 	return r.retryAttempt.NextBackoff()
 }
