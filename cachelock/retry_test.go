@@ -32,4 +32,15 @@ func TestRetryStrategy(t *testing.T) {
 		require.Equal(t, 300*time.Millisecond, retry.NextBackoff())
 		require.Equal(t, 300*time.Millisecond, retry.NextBackoff())
 	})
+	t.Run("attempt bound", func(t *testing.T) {
+		count := 5
+		backoff := 100 * time.Millisecond
+		attempt := AttemptBoundRetryStrategy(count, func() RetryAttempt {
+			return LinearBackoff(backoff)
+		})()
+		for i := 0; i < 5; i++ {
+			require.Equal(t, backoff, attempt.NextBackoff())
+		}
+		require.Equal(t, NoRetry().NextBackoff(), attempt.NextBackoff())
+	})
 }

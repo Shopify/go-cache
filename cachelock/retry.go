@@ -74,3 +74,26 @@ func (r *exponentialBackoff) NextBackoff() time.Duration {
 		return d
 	}
 }
+
+func AttemptBoundRetryStrategy(maxAttempts int, retryStrategy RetryStrategy) RetryStrategy {
+	if maxAttempts < 1 {
+		panic("max attempts must be greater than 0")
+	}
+	return func() RetryAttempt {
+		return &attemptBoundRetryAttempt{maxAttempts: uint64(maxAttempts), retryAttempt: retryStrategy()}
+	}
+}
+
+type attemptBoundRetryAttempt struct {
+	attempts     uint64
+	maxAttempts  uint64
+	retryAttempt RetryAttempt
+}
+
+func (r *attemptBoundRetryAttempt) NextBackoff() time.Duration {
+	if r.attempts >= r.maxAttempts {
+		return NoRetry().NextBackoff()
+	}
+	atomic.AddUint64(&r.attempts, 1)
+	return r.retryAttempt.NextBackoff()
+}
