@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.4.0] - 2022-06-03
+### Changed
+- Bump requirement to `go1.17`
+
 ## [v2.3.0] - 2021-10-01
 ### Added
 - Add an attempt bound retry strategy
