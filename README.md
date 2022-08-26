@@ -6,7 +6,7 @@ Inspired from https://github.com/gookit/cache, but designed to be wrapped, simil
 
 # Requirements
 
-- [Go 1.15+](http://golang.org/dl/)
+- [Go 1.17+](http://golang.org/dl/)
 
 # Installation
 

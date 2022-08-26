@@ -2,7 +2,7 @@ name: go-cache
 
 up:
   - go:
-      version: "1.15.12"
+      version: "1.17"
       modules: true
       tools:
         - github.com/alecthomas/gometalinter
@@ -12,7 +12,7 @@ up:
         name: Load dependencies
         met?: go mod tidy
         meet: go mod tidy
-  - railgun
+  - isogun
 
 commands:
   test: go test -race ./...
